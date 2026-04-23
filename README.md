@@ -41,6 +41,7 @@ DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=
 DB_NAME=rick-and-morty-db
+DB_AUTO_SYNC=true
 RICK_AND_MORTY_API_BASE_URL=https://rickandmortyapi.com/api
 RICK_AND_MORTY_MAX_RETRIES=4
 RICK_AND_MORTY_RETRY_BASE_DELAY_MS=500
@@ -84,6 +85,46 @@ npm run start:api
 npm run start:worker
 ```
 
+## Docker Compose (API + Banco + Worker)
+
+Foi adicionado um `docker-compose.yml` na raiz deste repositorio para subir tudo com um unico comando:
+
+- `db`: PostgreSQL 16
+- `api`: servidor HTTP (porta `3000`)
+- `worker`: processo de sincronizacao agendada
+
+### Subir stack completa
+
+Na raíz do repositório:
+
+```bash
+docker compose up --build
+```
+
+### Rodar em background
+
+```bash
+docker compose up --build -d
+```
+
+### Parar e remover containers
+
+```bash
+docker compose down
+```
+
+### Parar e remover tambem o volume do banco
+
+```bash
+docker compose down -v
+```
+
+### Testar API localmente com Docker
+
+- Health check: `http://localhost:3000/health`
+- Personagens: `http://localhost:3000/api/characters`
+- Status da sync: `http://localhost:3000/api/sync/status`
+
 ## Scripts disponiveis
 
 - `npm run dev`: API + worker (watch)
@@ -93,6 +134,13 @@ npm run start:worker
 - `npm run start`: API + worker (build compilado)
 - `npm run start:api`: apenas API em producao
 - `npm run start:worker`: apenas worker em producao
+
+Scripts Docker uteis (executados na raiz do projeto):
+
+- `docker compose up --build`: sobe db, api e worker
+- `docker compose ps`: mostra status dos servicos
+- `docker compose logs -f api`: acompanha logs da API
+- `docker compose logs -f worker`: acompanha logs do worker
 
 ## Endpoints
 
@@ -242,6 +290,8 @@ Se voce usar outro dominio no frontend, ajuste a configuracao de CORS.
 
 A API inicializa os modelos e valida conexao com o PostgreSQL no startup.
 
+Com `DB_AUTO_SYNC=true`, as tabelas sao criadas/atualizadas automaticamente no startup.
+
 Tabelas usadas:
 
 - `characters`
@@ -249,8 +299,8 @@ Tabelas usadas:
 
 Observacao importante:
 
-- Nao ha migrations automatizadas no projeto no estado atual.
-- Garanta que as tabelas existam no banco antes de iniciar o ambiente.
+- Nao ha migrations versionadas no projeto no estado atual.
+- Em Docker Compose, `DB_AUTO_SYNC=true` ja deixa o ambiente funcional automaticamente.
 
 ## Estrutura principal
 

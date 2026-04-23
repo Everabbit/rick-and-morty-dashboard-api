@@ -23,6 +23,23 @@ const textWithDefault = (rawValue: string | undefined, fallback: string): string
   return rawValue.trim();
 };
 
+const booleanWithDefault = (rawValue: string | undefined, fallback: boolean): boolean => {
+  if (!rawValue) {
+    return fallback;
+  }
+
+  const value = rawValue.trim().toLowerCase();
+  if (value === "true" || value === "1") {
+    return true;
+  }
+
+  if (value === "false" || value === "0") {
+    return false;
+  }
+
+  throw new Error(`Valor invalido para configuracao booleana: ${rawValue}`);
+};
+
 export const env = {
   nodeEnv: textWithDefault(process.env.NODE_ENV, "development"),
   port: numberWithDefault(process.env.PORT, 3000),
@@ -32,6 +49,7 @@ export const env = {
     user: textWithDefault(process.env.DB_USER, "postgres"),
     password: textWithDefault(process.env.DB_PASSWORD, ""),
     name: textWithDefault(process.env.DB_NAME, "rick_and_morty"),
+    autoSync: booleanWithDefault(process.env.DB_AUTO_SYNC, true),
   },
   rickAndMorty: {
     baseUrl: textWithDefault(process.env.RICK_AND_MORTY_API_BASE_URL, "https://rickandmortyapi.com/api"),

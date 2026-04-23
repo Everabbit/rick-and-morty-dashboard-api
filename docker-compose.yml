@@ -1,0 +1,74 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: rickmorty-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: rick-and-morty-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d rick-and-morty-db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rickmorty-api
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: rick-and-morty-db
+      DB_AUTO_SYNC: "true"
+      RICK_AND_MORTY_API_BASE_URL: https://rickandmortyapi.com/api
+      RICK_AND_MORTY_MAX_RETRIES: 4
+      RICK_AND_MORTY_RETRY_BASE_DELAY_MS: 500
+      RICK_AND_MORTY_RETRY_JITTER_MS: 200
+      RICK_AND_MORTY_INTER_PAGE_DELAY_MS: 300
+      RICK_AND_MORTY_TIMEOUT_MS: 10000
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    command: ["npm", "run", "start:api"]
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rickmorty-worker
+    environment:
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: rick-and-morty-db
+      DB_AUTO_SYNC: "true"
+      RICK_AND_MORTY_API_BASE_URL: https://rickandmortyapi.com/api
+      RICK_AND_MORTY_MAX_RETRIES: 4
+      RICK_AND_MORTY_RETRY_BASE_DELAY_MS: 500
+      RICK_AND_MORTY_RETRY_JITTER_MS: 200
+      RICK_AND_MORTY_INTER_PAGE_DELAY_MS: 300
+      RICK_AND_MORTY_TIMEOUT_MS: 10000
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["npm", "run", "start:worker"]
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
