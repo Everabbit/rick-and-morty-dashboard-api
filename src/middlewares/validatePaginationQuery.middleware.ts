@@ -1,30 +1,16 @@
 import type { NextFunction, Request, Response } from "express";
 import { CharacterGender } from "../enums/characterGender.enum.js";
 import { CharacterStatus } from "../enums/characterStatus.enum.js";
-import type {
-  CharacterFilters,
-  CharacterListQuery,
-  CharacterSortField,
-  CharacterSortOrder,
-} from "../interfaces/characterFilters.interface.js";
+import type { CharacterFilters, CharacterListQuery, CharacterSortField, CharacterSortOrder } from "../interfaces/characterFilters.interface.js";
 import { createApiError } from "./errorHandler.middleware.js";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
-const MAX_LIMIT = 50;
+const MAX_LIMIT = 100;
 const DEFAULT_SORT_BY: CharacterSortField = "externalId";
 const DEFAULT_SORT_ORDER: CharacterSortOrder = "ASC";
-const ALLOWED_STATUS_VALUES = new Set<number>([
-  CharacterStatus.ALIVE,
-  CharacterStatus.DEAD,
-  CharacterStatus.UNKNOWN,
-]);
-const ALLOWED_GENDER_VALUES = new Set<number>([
-  CharacterGender.FEMALE,
-  CharacterGender.MALE,
-  CharacterGender.GENDERLESS,
-  CharacterGender.UNKNOWN,
-]);
+const ALLOWED_STATUS_VALUES = new Set<number>([CharacterStatus.ALIVE, CharacterStatus.DEAD, CharacterStatus.UNKNOWN]);
+const ALLOWED_GENDER_VALUES = new Set<number>([CharacterGender.FEMALE, CharacterGender.MALE, CharacterGender.GENDERLESS, CharacterGender.UNKNOWN]);
 
 const ALLOWED_SORT_FIELDS: CharacterSortField[] = [
   "externalId",
@@ -75,25 +61,14 @@ const parseOptionalInteger = (raw: string | undefined): number | undefined => {
   return parsed;
 };
 
-const parseOptionalEnum = (
-  raw: string | undefined,
-  fieldName: string,
-  allowedValues: Set<number>,
-  next: NextFunction,
-): number | undefined => {
+const parseOptionalEnum = (raw: string | undefined, fieldName: string, allowedValues: Set<number>, next: NextFunction): number | undefined => {
   const parsed = parseOptionalInteger(raw);
   if (parsed === undefined) {
     return undefined;
   }
 
   if (!allowedValues.has(parsed)) {
-    next(
-      createApiError(
-        400,
-        `Parametro ${fieldName} invalido`,
-        `Valores permitidos: ${Array.from(allowedValues).join(", ")}`,
-      ),
-    );
+    next(createApiError(400, `Parametro ${fieldName} invalido`, `Valores permitidos: ${Array.from(allowedValues).join(", ")}`));
     return undefined;
   }
 
@@ -149,22 +124,12 @@ export const validatePaginationQueryMiddleware = (req: Request, res: Response, n
   let page = DEFAULT_PAGE;
   let limit = DEFAULT_LIMIT;
 
-  const status = parseOptionalEnum(
-    req.query.status as string | undefined,
-    "status",
-    ALLOWED_STATUS_VALUES,
-    next,
-  );
+  const status = parseOptionalEnum(req.query.status as string | undefined, "status", ALLOWED_STATUS_VALUES, next);
   if (req.query.status && status === undefined) {
     return;
   }
 
-  const gender = parseOptionalEnum(
-    req.query.gender as string | undefined,
-    "gender",
-    ALLOWED_GENDER_VALUES,
-    next,
-  );
+  const gender = parseOptionalEnum(req.query.gender as string | undefined, "gender", ALLOWED_GENDER_VALUES, next);
   if (req.query.gender && gender === undefined) {
     return;
   }
