@@ -8,7 +8,15 @@ import { errorHandlerMiddleware } from "./middlewares/errorHandler.middleware.js
 
 export const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:9000", // dev quasar
+      "https://rick-and-morty-dashboard-front.vercel.app",
+    ],
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use("/api", apiRateLimitMiddleware);
 app.use(healthRouter);
